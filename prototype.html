@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="root"></div>
+</body>
+
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react?dev",
+    "react-dom/client": "https://esm.sh/react-dom/client?dev"
+  }
+}
+</script>
+
+
+<style>
+:focus {
+    outline: none !important;
+}
+
+</style>
+
+<script type="text/babel" data-type="module">
+import React, { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+
+import { useState } from 'react';
+
+
+
+
+
+function InputBox(props) {
+
+    
+    return (
+        <div className="align-bottom absolute justify-center items-start bottom-10 w-10/12">
+            <input type="text" className="rounded-full bg-green-500 text-white w-10/12 h-8 mx-8 border-2 border-indigo-600" value={props.value} onChange={e => props.setValue(e.target.value)} onKeyDown={(e) => (event.key === "Enter" ? props.setValue(props.submit(props.value)) : null)} aria-describedby="inputGroup-sizing-default" />
+        </div>
+
+    );
+} 
+
+function InputButton(props) {
+    return (
+        <input type="button" value="Submit" onClick={(() => props.setValue(props.submit(props.value)))} className="w-1/12 text-white bg-green-500 rounded-full align-bottom absolute justify-center items-start bottom-10 h-8 left-3/4" />
+    )
+}
+
+//         <input type="text" value={value} onChange={e => setValue(e.target.value)} onKeyDown={() => (event.key === "Enter" ? submit(value) : null)} />
+
+
+function List(props) {
+    function senderdiff(player) {
+        if (player) {
+            return "bg-green-500";
+        } else {
+            return "bg-teal-300";
+        }
+    }
+    return (
+        <div>
+            {props.listOfItems.map(item => (
+                <div className={"text-white rounded-lg mt-2 ml-4 max-w-fit "+senderdiff(item.player)}>{item.name}</div>
+            ))}
+        </div>
+    );
+}
+
+async function AIresponse (message) {
+    let e = await fetch('http://localhost:11434/api/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: JSON.stringify({model: "zephyr", messages: [{role: "user", content: "KEEP YOUR RESPONSE SHORT "+message}], stream: false})
+});
+    return await e.json();
+}
+// 
+// '{\n  "model": "zephyr",\n  "messages": [{"role": "user","content": "why is the sky blue?"}],\n  "stream": false\n}'
+let i = 0;
+
+function InputPanel (props) {
+    const [value, setValue] = useState("");
+    function change_message(name) {
+        props.setItems([
+            ...props.listOfItems,
+            {id: i, player: true, name: value},
+            {id: i, player: false, name: name}
+        ])
+    }
+    function submit() {
+        props.setItems([
+            ...props.listOfItems,
+            {id: i+1, player: true, name: value}, // this needs to have an id (assigned by server side)  
+        ])
+        let response = AIresponse(value);
+        console.log(response);
+        response.then((val) => change_message(val.message.content)); // change_message(name)
+        console.log(props.listOfItems);
+        console.log(i);
+        i += 2;
+        return ""
+    }
+    return (
+    <div>
+        <InputBox value={value} setValue={setValue} listOfItems={props.listOfItems} setItems={props.setItems} submit={submit} />
+        <InputButton submit={submit} value={value} />
+    </div>
+    )
+}
+
+function ChatPanel() {
+    const [listOfItems, setItems] = useState([]);
+    return (
+        <div className="h-full w-4/5 fixed z-1 overflow-x-hidden right-0">
+        <List listOfItems={listOfItems} />
+        <InputPanel listOfItems={listOfItems} setItems={setItems} />
+        </div>
+    )
+}
+// <InputBox listOfItems={listOfItems} setItems={setItems}/>
+
+function InfoPanel() {
+    return (
+        <div className="h-full w-1/5 fixed z-1 overflow-x-hidden left-0 border-r-4 border-stone-300">
+            OVERTURE
+        </div>
+    )
+}
+
+export default function App(){
+    
+    return (
+        <>
+        <InfoPanel />
+        <ChatPanel />
+        </>
+    );
+}
+
+const root = createRoot(document.getElementById('root'));
+
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+</script>
+</html>
