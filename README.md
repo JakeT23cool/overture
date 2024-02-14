@@ -1,12 +1,14 @@
 # Overture [Name subject to change]
-Overture is a online matchmaking turing test.
 
-to run:
+How to install and run:
 
 - install express
   ```npm install express```
 
 - install [ollama](https://ollama.com/download)
+
+- start ollama
+```ollama serve```
 
 - run
 ```sudo node server.js```
