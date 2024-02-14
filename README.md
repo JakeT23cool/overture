@@ -7,6 +7,9 @@ How to install and run:
 
 - install [ollama](https://ollama.com/download)
 
+- install prototype model
+```ollama pull zephyr```
+
 - start ollama
 ```ollama serve```
 
