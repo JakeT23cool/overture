@@ -1,4 +1,4 @@
-# Overture [Name subject to change]
+# Overture
 
 How to install and run:
 
