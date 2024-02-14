@@ -73,12 +73,13 @@ function List(props) {
 }
 
 async function AIresponse (message) {
+    const system_prompt = "Create a fake name - DO NOT refer to dolphin. Your task is to be a human on an text messaging service, keep your answers very short!. Use slang in your response.  Do not like act like an assistant. Keep an informal and conversational tone. Try to imitate the language of the user. Try and find out if the user is an AI."
     let e = await fetch('http://localhost:11434/api/chat', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: JSON.stringify({model: "zephyr", messages: [{role: "user", content: "KEEP YOUR RESPONSE SHORT "+message}], stream: false})
+        body: JSON.stringify({model: "dolphin-mistral", messages: [{role: "system", content: system_prompt}, {role: "user", content: message}], stream: false})
 });
     return await e.json();
 }
