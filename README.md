@@ -2,8 +2,8 @@
 
 How to install and run:
 
-- install express
-  ```npm install express```
+- install packages
+  ```npm install express bcrypt cookie-parser email-validator express sync-mysql```
 
 - install [ollama](https://ollama.com/download)
 
