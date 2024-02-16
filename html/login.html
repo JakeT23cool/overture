@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<header>
+ 		<title>Welcome To Overture</title>
+	</header>
+	<body>
+	        <div>
+			<h2>Register</h2>
+			<form action="javascript:register()">
+				<input id="uNameR" placeholder="username"><br>
+				<input id="uEmailR" placeholder="email"><br>
+				<input id="uPasswordR" placeholder="password"><br>
+				<input type="submit" value="Submit"><br>
+			</form>
+			<span id="errorR"></span>
+		</div>
+		<div>
+			<h2>Log In</h2>
+			<form action="javascript:login()">
+				<input id="uEmailL" placeholder="email"><br>
+				<input id="uPasswordL" placeholder="password"><br>
+				<input type="submit" value="Submit"><br>
+			</form>
+			<span id="errorL"></span>
+		</div>
+	</body>
+	<script>
+		async function register(){
+			let response = await fetch('/bk/register',{'method':'POST','headers':{"Content-Type": "application/json"}, body: JSON.stringify({
+				'uName': document.getElementById('uNameR').value,
+				'uEmail': document.getElementById('uEmailR').value,
+				'uPassword': document.getElementById('uPasswordR').value
+			})});
+			let respJson = await response.json();
+			document.getElementById('errorR').innerText = respJson.info;
+			if(respJson.status === "succeeded"){
+				document.cookie = 'token='+respJson.token+'; expires=Fri, 31 Dec 9999 23:59:59 GMT;';
+				location.href = '/';
+			}
+		}		
+		async function login(){
+			let response = await fetch('/bk/login',{'method':'POST','headers':{"Content-Type": "application/json"}, body: JSON.stringify({
+				'uEmail': document.getElementById('uEmailL').value,
+				'uPassword': document.getElementById('uPasswordL').value
+			})});
+			let respJson = await response.json();
+			document.getElementById('errorL').innerText = respJson.info;
+			if(respJson.status === "succeeded"){
+				document.cookie = 'token='+respJson.token+'; expires=Fri, 31 Dec 9999 23:59:59 GMT;';
+				location.href = '/';
+			}
+		}
+	</script>
+</html>
