@@ -28,7 +28,6 @@ const wss = new WebSocket.Server({ port: 7071 });
 
 wss.on("connection", ws => {
 	console.log("client connected.")
-	ws.send("Ping"); // pong!
 	ws.on("close", () => console.log("client DISCONNECTED"))
 	ws.on("message", data => {
 		console.log("%s", data);
