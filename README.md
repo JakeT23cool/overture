@@ -41,3 +41,11 @@ CREATE TABLE `messageBank` (
 
 - run
 ```node server.js```
+
+## TODO
+- add client map
+- implement matchmaking
+- create landing page
+- improve main UI
+- implement proper error handling
+- chat retrieval
