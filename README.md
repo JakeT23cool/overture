@@ -29,7 +29,7 @@ CREATE TABLE `messageBank` (
 ```
 <!---`chatId` text NOT NULL,-->
 - install packages
-  ```npm install express bcrypt cookie-parser email-validator express sync-mysql```
+  ```npm install express bcrypt cookie-parser email-validator express sync-mysql ollama```
 
 - install [ollama](https://ollama.com/download)
 
