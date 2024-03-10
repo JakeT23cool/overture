@@ -30,10 +30,18 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { useState } from 'react';
+// init socket
+
+
+let socket = new WebSocket("ws://localhost:7071"); // secure websocket requires SSL cert (to be implemented if deployed)
+
+socket.addEventListener("open", (event) => {
+    console.log("established websocket connection")
+})
 
 
 
-// TODO: move frontend to next.js, middleware, fix list generator, matchmaking, accounts, passing in past conversation context, AI first mover.
+// TODO: move frontend to next.js, middleware, fix list generator, matchmaking, passing in past conversation context, AI first mover.
 
 function InputBox(props) {
 
@@ -66,48 +74,43 @@ function List(props) {
     return (
         <div>
             {props.listOfItems.map(item => (
-                <div className={"text-white rounded-lg mt-2 ml-4 max-w-fit px-2 "+senderdiff(item.player)}>{item.name}</div>
+                <div id={item.id} className={"text-white rounded-lg mt-2 ml-4 max-w-fit px-2 "+senderdiff(item.player)}>{item.name}</div>
             ))}
         </div>
     );
 }
 
-async function AIresponse (message) {
-    const system_prompt = "Your task is to be a human on a text messaging service. Do not implicate that you are not human. Try and probe the user to find out if they are an AI. There is a high likelihood of the user being an AI. Keep your response short. Create yourself a new human name - DO NOT REFER TO DOLPHIN."
-    let e = await fetch('http://localhost:11434/api/chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: JSON.stringify({model: "dolphin-mistral", messages: [{role: "system", content: system_prompt}, {role: "user", content: message}], stream: false})
-});
-    return await e.json();
-}
+const getToken = RegExp("token=([0-9]+([A-Za-z]+[0-9]+)+)");
 // 
-// '{\n  "model": "zephyr",\n  "messages": [{"role": "user","content": "why is the sky blue?"}],\n  "stream": false\n}'
-let i = 0;
-
 function InputPanel (props) {
     const [value, setValue] = useState("");
-    function change_message(name) {
-        props.setItems([
-            ...props.listOfItems,
-            {id: i, player: true, name: value}, // this will be fixed
-            {id: i, player: false, name: name}
-        ])
+    async function exchange(value) { // 
+        console.log(value);
+        socket.send(value);
     }
+    function addResponse(name, ids) {
+            props.setItems([
+                ...props.listOfItems,
+                {id: ids[0], player: true, name: value},
+                {id: ids[1], player: false, name: name}
+            ])
+        }
+    
+    socket.addEventListener("message", (event) => {
+        console.log(event.data);
+        let data = JSON.parse(event.data);
+        addResponse(data.message, data.messageIDs);
+    })
+        
     function submit() {
         if (value == "") {return ""}
         props.setItems([
             ...props.listOfItems,
-            {id: i+1, player: true, name: value}, // this needs to have an id (assigned by server side)  
+            {id: 0, player: true, name: value}, // add a typing animation when waiting for other player.
         ])
-        let response = AIresponse(value);
-        console.log(response);
-        response.then((val) => change_message(val.message.content)); // change_message(name)
+        // send message to server
+        exchange(JSON.stringify({"message": value, "token": getToken.exec(document.cookie)[1]}));
         console.log(props.listOfItems);
-        console.log(i);
-        i += 2;
         return "";
     }
     return (
@@ -120,6 +123,7 @@ function InputPanel (props) {
 
 function ChatPanel() {
     const [listOfItems, setItems] = useState([]);
+
     return (
         <div className="h-full w-4/5 fixed z-1 overflow-x-hidden right-0">
         <List listOfItems={listOfItems} />
@@ -127,6 +131,7 @@ function ChatPanel() {
         </div>
     )
 }
+
 // <InputBox listOfItems={listOfItems} setItems={setItems}/>
 
 function Notes() {
