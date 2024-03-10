@@ -33,7 +33,7 @@ wss.on("connection", ws => {
 	ws.on("message", data => {
 		console.log("%s", data);
 		let pdata = JSON.parse(data);
-		ProcessMessage(pdata.message, pdata.token, ws);
+		processMessage(pdata.message, pdata.token, ws);
 	})
 })
 
@@ -163,7 +163,7 @@ function saveMessage(messageID, userID, playerc, aiID, promptID, message){
 
 
 
-function ProcessMessage(message, token, ws){ // implement sessions to associate messages with a certain session
+function processMessage(message, token, ws){ // implement sessions to associate messages with a certain session
 	// matchmaking, sockets, dynamic prompt switcher.
 
 	let time = new Date().getTime()
