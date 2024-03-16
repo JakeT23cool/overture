@@ -1,7 +1,7 @@
 const monitor = process.env.MONITOR;
 const monitorIP = process.env.MONITORIP;
 
-function log(req,res,next){
+function logging(req,res,next){
 	if(monitor != "1"){
 		next();
 		return 0;
@@ -15,4 +15,4 @@ function log(req,res,next){
 	console.log(s);
 }
 
-module.exports = { log };
+export { logging }; // make it an ES module

@@ -14,8 +14,22 @@ CREATE TABLE `users` (
     PRIMARY KEY (`uId`)
 );
 ```
+
+```sql
+CREATE TABLE `messageBank` (
+    `mId` varchar(128) NOT NULL, -- messageID
+    `uId` int(11) NOT NULL, -- userID
+    `player` boolean NOT NULL, -- player condition
+    `aId` text DEFAULT NULL, -- AI ID
+    `pId` text DEFAULT NULL, -- prompt ID
+    `message` text NOT NULL, -- actual messages
+    PRIMARY KEY (`mID`),
+    FOREIGN KEY (`uId`) REFERENCES users(`uId`)
+);
+```
+<!---`chatId` text NOT NULL,-->
 - install packages
-  ```npm install express bcrypt cookie-parser email-validator express sync-mysql```
+  ```npm install express bcrypt cookie-parser email-validator express sync-mysql ollama```
 
 - install [ollama](https://ollama.com/download)
 
@@ -26,7 +40,7 @@ CREATE TABLE `users` (
 ```ollama serve```
 
 - run
-```sudo node server.js```
+```node server.js```
 
 ## TODO
 - add client map
