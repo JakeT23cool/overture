@@ -30,7 +30,7 @@ CREATE TABLE `messageBank` (
 ```
 <!----->
 - install packages
-  ```npm install express bcrypt cookie-parser email-validator express sync-mysql ollama```
+  ```npm install express bcrypt cookie-parser email-validator express sync-mysql ollama uuid```
 
 - install [ollama](https://ollama.com/download)
 
@@ -51,4 +51,4 @@ CREATE TABLE `messageBank` (
 - chat retrieval
 - error handling
 - move main UI to next.js
-- tune a model to provide Concise and human like responses.
+- tune a model to provide concise and human like responses.
