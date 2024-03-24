@@ -30,19 +30,21 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { useState } from 'react';
+
+const getToken = RegExp("token=([0-9]+([A-Za-z]+[0-9]+)+)");
+
+fetch("/bk/newSession", {method: 'POST'}) // onload for now
+
 // init socket
-
-
-let socket = new WebSocket("ws://localhost:7071"); // secure websocket requires SSL cert (to be implemented if deployed)
+const host = "localhost";
+let socket = new WebSocket("ws://"+host+":7071"); // secure websocket requires SSL cert (to be implemented if deployed)
 
 socket.addEventListener("open", (event) => {
-    console.log("established websocket connection")
+    socket.send(JSON.stringify({"type": "init", "token": getToken.exec(document.cookie)[1]}));
+    console.log("established websocket connection");
 })
 
-
-
-// TODO: move frontend to next.js, middleware, fix list generator, matchmaking, passing in past conversation context, AI first mover.
-
+ 
 function InputBox(props) {
 
     
@@ -80,7 +82,7 @@ function List(props) {
     );
 }
 
-const getToken = RegExp("token=([0-9]+([A-Za-z]+[0-9]+)+)");
+
 // 
 function InputPanel (props) {
     const [value, setValue] = useState("");
@@ -109,7 +111,7 @@ function InputPanel (props) {
             {id: 0, player: true, name: value}, // add a typing animation when waiting for other player.
         ])
         // send message to server
-        exchange(JSON.stringify({"message": value, "token": getToken.exec(document.cookie)[1]}));
+        exchange(JSON.stringify({"type": "message", "message": value, "token": getToken.exec(document.cookie)[1]}));
         console.log(props.listOfItems);
         return "";
     }

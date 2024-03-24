@@ -24,15 +24,22 @@ import config from './config.json' assert { type: 'json' };
 
 const WebSocket = required('ws');
 const wss = new WebSocket.Server({ port: 7071 });
-// const clients = new Map(); // this will be required for matchmaking
 
-wss.on("connection", ws => {
+
+wss.on("connection", ws => { // onconnect add to history object
 	console.log("client connected.")
 	ws.on("close", () => console.log("client DISCONNECTED"))
 	ws.on("message", data => {
 		console.log("%s", data);
 		let pdata = JSON.parse(data);
-		processMessage(pdata.message, pdata.token, ws);
+		if (pdata.type == "message"){
+			processMessage(pdata.message, pdata.token, ws);
+		} else if (pdata.type == "init"){
+			let uId = uIdFromToken(pdata.token);
+			let currentSession = history[uId]["currentSession"]
+			console.log(currentSession);
+			history[uId]["sessions"][currentSession]["ws"] = ws
+		}
 	})
 })
 
@@ -47,7 +54,7 @@ const system_prompt = "Your task is to be a human on a text messaging service. D
 
 const sqlConnection = new mysql({host: config.host, user: config.user, password: config.password, database: config.database});
 
-var history = {}
+var history = {};
 
 
 app.use(express.json());
@@ -77,7 +84,7 @@ function tokenConfirm(token) {
 }
 
 function uIdFromToken(token) {
-	return sqlConnection.query("SELECT `uId` FROM `users` WHERE `uToken`=?;",[token]);
+	return sqlConnection.query("SELECT `uId` FROM `users` WHERE `uToken`=?;",[token])[0].uId;
 }
 
 // uuid.v1()	
@@ -150,16 +157,29 @@ app.post('/bk/register', async (req, res) => {
 	res.send({'status':'succeeded','info':'Created Account','token':newToken});
 });
 
+app.post("/bk/newSession", (req, res) => {
+	console.log("RAN!");
+	if (tokenConfirm(req.cookies.token)) {
+		let uId = uIdFromToken(req.cookies.token);
+		if (history[uId] == undefined){
+			history[uId] = {"sessions" : {}, "timestamps" : []}; // generation timestamps, session handler
+		}
+		let Session = uuid.v4();
+		history[uId]["currentSession"] = Session;
+		history[uId]["sessions"][Session] = {"messages": []}; // pass in the websocket !
+		res.send({"status": "succeeded"});
+	} else {
+		res.send({"status": "failed"});
+	}
+})
 
-
-function saveMessage(messageID, userID, playerc, aiID, promptID, message){
+function saveMessage(messageID, userID, playerc, aiID, promptID, chatID, message){
 	let values = [
-		messageID, userID, playerc, aiID, promptID, message
+		messageID, userID, playerc, aiID, promptID, chatID, message
 	]
 	console.log(values)
-	sqlConnection.query("INSERT INTO `messageBank` (mId, uId, player, aId, pId, message) VALUES (?,?,?,?,?,?)", values);
+	sqlConnection.query("INSERT INTO `messageBank` (mId, uId, player, aId, pId, chatId, message) VALUES (?,?,?,?,?,?,?)", values);
 }
-
 
 
 function processMessage(message, token, ws){ // implement sessions to associate messages with a certain session
@@ -168,12 +188,15 @@ function processMessage(message, token, ws){ // implement sessions to associate 
 	let time = new Date().getTime()
 
 	let IDs = [
-		(time).toString(),
-		(time+1).toString()
+		uuid.v1(), // replace with timeuuid
+		uuid.v1()
 	]
-
 	let promptId = md5hash(system_prompt).slice(0, 5);
 	console.log(message);
+
+	let userId = uIdFromToken(token);
+	let chatId = history[userId].currentSession;
+
 	if (!tokenConfirm(token)) {
 		ws.send(JSON.stringify({'status':'failed','info':'Please login - account not active.','token':null}));
 		return 0;
@@ -182,23 +205,19 @@ function processMessage(message, token, ws){ // implement sessions to associate 
 		return 0;
 	}
 	else {
-		let userId = uIdFromToken(token)[0].uId;
-		console.log(typeof(messageold));
-		saveMessage(IDs[0], userId, false, llm, promptId, message); // save player's response REMEMBER CHAT ID
 
-		if(history[userId] === undefined) {history[userId] = {"messages": []}} // todo: This would be MUCH better as a map
+		saveMessage(IDs[0], userId, false, llm, promptId, chatId, message); // save player's response 
 
-		localRequest(llm, system_prompt, history[userId].messages, message).then((response => {
-			saveMessage(IDs[1], userId, true, llm, promptId, response.message.content); // save AI's response
-			if (history[userId].messages.length == 0){
-				history[userId] = {"messages": [{"role": "user", "content": message}, response.message], "timestamps": [time]};
-			} else {
-				history[userId].messages.push({"role": "user", "content": message}, response.message);
-				history[userId].timestamps.push(time);
-			}
+		localRequest(llm, system_prompt, history[userId]["sessions"][chatId].messages, message).then((response => {
+
+			saveMessage(IDs[1], userId, true, llm, promptId, chatId, response.message.content); // save AI's response
+
+			history[userId]["sessions"][chatId]["messages"].push({"role": "user", "content": message}, response.message);
+
+			history[userId]["timestamps"].push(time);
 			
 			ws.send(JSON.stringify({"message": response.message.content, "messageIDs": IDs}));
-		})); // switch between AI's
+		}));
 	}	
 }
 

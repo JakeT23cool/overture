@@ -22,12 +22,13 @@ CREATE TABLE `messageBank` (
     `player` boolean NOT NULL, -- player condition
     `aId` text DEFAULT NULL, -- AI ID
     `pId` text DEFAULT NULL, -- prompt ID
+    `chatId` text NOT NULL, -- Chat ID
     `message` text NOT NULL, -- actual messages
     PRIMARY KEY (`mID`),
     FOREIGN KEY (`uId`) REFERENCES users(`uId`)
 );
 ```
-<!---`chatId` text NOT NULL,-->
+<!----->
 - install packages
   ```npm install express bcrypt cookie-parser email-validator express sync-mysql ollama```
 
@@ -47,5 +48,7 @@ CREATE TABLE `messageBank` (
 - implement matchmaking
 - create landing page
 - improve main UI
-- implement proper error handling
 - chat retrieval
+- error handling
+- move main UI to next.js
+- tune a model to provide Concise and human like responses.
