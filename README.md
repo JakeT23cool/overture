@@ -44,11 +44,13 @@ CREATE TABLE `messageBank` (
 ```node server.js```
 
 ## TODO
-- add client map
 - implement matchmaking
-- create landing page
 - improve main UI
 - chat retrieval
 - error handling
 - move main UI to next.js
 - tune a model to provide concise and human like responses.
+
+## License
+[![GNU AGPLv3 Image](https://www.gnu.org/graphics/agplv3-with-text-162x68.png)](https://www.gnu.org/licenses/agpl-3.0.html)  
+Overture is licensed under the AGPLv3.
